@@ -48,7 +48,6 @@ public class TikaLambdaHandler implements RequestHandler<S3Event, String> {
             S3EventNotificationRecord record = s3event.getRecords().get(0);
 
             String bucket = record.getS3().getBucket().getName();
-            String extractBucket = "extracts." + bucket;
 
             // Object key may have spaces or unicode non-ASCII characters.
             String key = URLDecoder.decode(record.getS3().getObject().getKey().replace('+', ' '), "UTF-8");
@@ -73,7 +72,7 @@ public class TikaLambdaHandler implements RequestHandler<S3Event, String> {
 
                 _logger.log("Saving extract file to S3");
                 InputStream inputStream = new ByteArrayInputStream(extractBytes);
-                s3Client.putObject(extractBucket, key + ".extract", inputStream, metaData);
+                s3Client.putObject(bucket, key + ".extract", inputStream, metaData);
             }
         } catch (IOException | TransformerConfigurationException | SAXException e) {
             _logger.log("Exception: " + e.getLocalizedMessage());
