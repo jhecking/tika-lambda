@@ -14,12 +14,11 @@
 	</properties>
 
   <dependencies>
-<!--		<dependency>
+		<dependency>
 		    <groupId>com.googlecode.json-simple</groupId>
 		    <artifactId>json-simple</artifactId>
 		    <version>1.1.1</version>
 		</dependency>
-  -->
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-s3</artifactId>
@@ -27,22 +26,6 @@
       <exclusions>
         <exclusion>
           <artifactId>aws-java-sdk-kinesis</artifactId>
-          <groupId>com.amazonaws</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>aws-java-sdk-sns</artifactId>
-          <groupId>com.amazonaws</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>aws-java-sdk-sqs</artifactId>
-          <groupId>com.amazonaws</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>aws-java-sdk-kms</artifactId>
-          <groupId>com.amazonaws</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>aws-java-sdk-dynamodbv2</artifactId>
           <groupId>com.amazonaws</groupId>
         </exclusion>
         <exclusion>
@@ -58,22 +41,6 @@
       <exclusions>
         <exclusion>
           <artifactId>aws-java-sdk-kinesis</artifactId>
-          <groupId>com.amazonaws</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>aws-java-sdk-sns</artifactId>
-          <groupId>com.amazonaws</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>aws-java-sdk-sqs</artifactId>
-          <groupId>com.amazonaws</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>aws-java-sdk-kms</artifactId>
-          <groupId>com.amazonaws</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>aws-java-sdk-dynamodbv2</artifactId>
           <groupId>com.amazonaws</groupId>
         </exclusion>
         <exclusion>
@@ -96,22 +63,6 @@
       		<artifactId>aws-java-sdk-kinesis</artifactId>
       		<groupId>com.amazonaws</groupId>
       	</exclusion>
-        <exclusion>
-          <artifactId>aws-java-sdk-sns</artifactId>
-          <groupId>com.amazonaws</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>aws-java-sdk-sqs</artifactId>
-          <groupId>com.amazonaws</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>aws-java-sdk-kms</artifactId>
-          <groupId>com.amazonaws</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>aws-java-sdk-dynamodbv2</artifactId>
-          <groupId>com.amazonaws</groupId>
-        </exclusion>
       	<exclusion>
       		<artifactId>aws-java-sdk-cognitoidentity</artifactId>
       		<groupId>com.amazonaws</groupId>
@@ -122,66 +73,6 @@
       <groupId>org.apache.tika</groupId>
       <artifactId>tika-parsers</artifactId>
       <version>1.10</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>plexus-utils</artifactId>
-          <groupId>org.codehaus.plexus</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>plexus</artifactId>
-          <groupId>org.codehaus</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>httpcomponents</artifactId>
-          <groupId>org.apache</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>maven</artifactId>
-          <groupId>org.apache</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>jackson</artifactId>
-          <groupId>com.fasterxml</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>jackcess</artifactId>
-          <groupId>com.healthmarketscience</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>james</artifactId>
-          <groupId>org.apache</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>opennlp</artifactId>
-          <groupId>org.apache</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>guava</artifactId>
-          <groupId>com.google</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>poi</artifactId>
-          <groupId>org.apache</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>poi-ooxml</artifactId>
-          <groupId>org.apache</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>cdm</artifactId>
-          <groupId>edu.ucar</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>grib</artifactId>
-          <groupId>edu.ucar</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>bcprov-jdk15on</artifactId>
-          <groupId>org.bouncycastle</groupId>
-        </exclusion>
-
-
-      </exclusions>
     </dependency>
   </dependencies>
 
@@ -192,7 +83,7 @@
         <artifactId>maven-shade-plugin</artifactId>
         <version>2.3</version>
         <configuration>
-          <createDependencyReducedPom>true</createDependencyReducedPom>
+          <createDependencyReducedPom>false</createDependencyReducedPom>
         </configuration>
         <executions>
           <execution>
@@ -202,16 +93,6 @@
             </goals>
             <configuration>
               <minimizeJar>true</minimizeJar>
-              <artifactSet>
-                <excludes>
-                  <exclude>classworlds:classworlds</exclude>
-                  <exclude>junit:junit</exclude>
-                  <exclude>jmock:*</exclude>
-                  <exclude>*:xml-apis</exclude>
-                  <exclude>org.apache.maven:lib:tests</exclude>
-                  <exclude>log4j:log4j:jar:</exclude>
-                </excludes>
-              </artifactSet>
             </configuration>
           </execution>
         </executions>
@@ -221,7 +102,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.1</version>
         <configuration>
-            <createDependencyReducedPom>true</createDependencyReducedPom>
+            <createDependencyReducedPom>false</createDependencyReducedPom>
             <source>1.8</source>
             <target>1.8</target>
         </configuration>
