@@ -1,0 +1,25 @@
+version: 0.1
+phases:
+  install:
+    commands:
+      - echo Nothing to do in the install phase...
+  pre_build:
+    commands:
+      - *** working dir ***
+      - pwd
+      - echo *** before dir listing ***
+      - ls -lR
+  build:
+    commands:
+      - echo Build of tika started on `date`
+      - mvn install
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo *** after dir listing ***
+      - ls -lR
+      - echo *** created files ***
+      - cat ./tika-lambda/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst
+artifacts:
+  files:
+    - ./target/tika-lambda-1.0-SNAPSHOT.jar
