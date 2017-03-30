@@ -20,7 +20,7 @@ phases:
       - echo *** after dir listing ***
       - ls -lR
       - echo *** created files ***
-      - cat ./tika-lambda/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst
+      - cat ./target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst
 artifacts:
   files:
     - ./target/tika-lambda-1.0-SNAPSHOT.jar
