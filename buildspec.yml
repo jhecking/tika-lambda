@@ -6,7 +6,7 @@ phases:
       - echo Nothing to do in the install phase...
   pre_build:
     commands:
-      - *** working dir ***
+      - echo *** working dir ***
       - pwd
       - echo *** before dir listing ***
       - ls -lR
