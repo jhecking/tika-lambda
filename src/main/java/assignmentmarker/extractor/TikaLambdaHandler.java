@@ -72,13 +72,19 @@ public class TikaLambdaHandler implements RequestHandler<S3Event, String> {
 
                 _logger.log("Saving extract file to S3");
                 InputStream inputStream = new ByteArrayInputStream(extractBytes);
-                s3Client.putObject(bucket, key + ".extract", inputStream, metaData);
+                String destkey = stripExtension(key);
+                s3Client.putObject(bucket, destkey + ".extract.json", inputStream, metaData);
             }
         } catch (IOException | TransformerConfigurationException | SAXException e) {
             _logger.log("Exception: " + e.getLocalizedMessage());
             throw new RuntimeException(e);
         }
         return "Success";
+    }
+
+    public static String stripExtension(final String s)
+    {
+        return s != null && s.lastIndexOf(".") > 0 ? s.substring(0, s.lastIndexOf(".")) : s;
     }
 
     private String doTikaStuff(String bucket, String key, InputStream objectData) throws IOException, TransformerConfigurationException, SAXException {

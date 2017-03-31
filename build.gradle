@@ -9,7 +9,6 @@ buildscript {
   repositories {
     maven {
       url "https://plugins.gradle.org/m2/"
-      url "http://repo1.maven.org/maven2"	
     }
   }
   dependencies {
@@ -31,7 +30,6 @@ dependencies {
     	exclude group:"com.amazonaws", module: "aws-java-sdk-dynamodb"
     	exclude group:"org.opengis", module: "geoapi"
     	exclude group:"org.aspectj", module: "aspectj"
-    	exclude group:"org.apache.poi"
     	exclude group:"org.apache.opennlp", module: "opennlp-tools"
     	exclude group:"com.google.guava"
     	exclude group:"org.apache.commons", module: "commons-vfs2"
@@ -47,7 +45,7 @@ dependencies {
 
     }
     compile "com.googlecode.json-simple:json-simple:1.1.1", withoutX
-    compile "org.apache.tika:tika-parsers:1.10", withoutX
+    compile "org.apache.tika:tika-parsers:+", withoutX
     compile "com.amazonaws:aws-lambda-java-core:+", withoutX
     compile "com.amazonaws:aws-lambda-java-events:+", withoutX
     compile "com.amazonaws:aws-java-sdk-core:+", withoutX
