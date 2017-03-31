@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.dovetailsoftware.aws</groupId>
+  <groupId>assignmentmarker.extractor</groupId>
   <artifactId>tika-lambda</artifactId>
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
@@ -78,6 +78,23 @@
 
   <build>
     <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+            <descriptors>
+                <descriptor>src/assembly/descriptor.xml</descriptor>
+            </descriptors>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-zip</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
