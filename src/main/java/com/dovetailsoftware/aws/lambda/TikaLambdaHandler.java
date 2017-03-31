@@ -1,4 +1,4 @@
-package assingmentmarker.extractor;
+package assignmentmarker.extractor;
 
 import java.io.IOException;
 import java.io.InputStream;
