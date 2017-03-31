@@ -13,7 +13,7 @@ phases:
   build:
     commands:
       - echo Build of tika started on `date`
-      - gradle build --debug
+      - gradle build
   post_build:
     commands:
       - echo Build completed on `date`
