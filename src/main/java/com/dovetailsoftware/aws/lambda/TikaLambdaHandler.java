@@ -1,4 +1,4 @@
-package com.dovetailsoftware.aws.lambda;
+package assingmentmarker.extractor;
 
 import java.io.IOException;
 import java.io.InputStream;
