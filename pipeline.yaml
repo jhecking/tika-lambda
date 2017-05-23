@@ -1,0 +1,377 @@
+
+AWSTemplateFormatVersion: "2010-09-09"
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - 
+        Label: 
+          default: "Text Extractor Code"
+        Parameters: 
+          - ExtractorBranch
+          - ExtractorOAuthToken
+          - ExtractorOwner
+          - ExtractorRepo
+      - 
+        Label: 
+          default: "Infrastructure Code"
+        Parameters: 
+          - InfracodeBranch
+          - InfracodeOAuthToken
+          - InfracodeOwner
+          - InfracodeRepo
+    ParameterLabels:
+      PipelineName: 
+        default: "Pipeline Name"
+      ExtractorBranch: 
+        default: "Git Branch"
+      ExtractorOAuthToken: 
+        default: "Github User OAuth Token"
+      ExtractorOwner: 
+        default: "Github Username"
+      ExtractorRepo: 
+        default: "Github Repo"
+      InfracodeBranch: 
+        default: "Git Branch"
+      InfracodeOAuthToken: 
+        default: "Github User OAuth Token"
+      InfracodeOwner: 
+        default: "Github Username"
+      InfracodeRepo: 
+        default: "Github Repo"
+Description: Build pipeline for Proserve Assignment Marker
+Parameters:
+  PipelineName:
+    Description: A name for the assignment marker pipeline
+    Type: String
+    Default: assignment-marker
+  ExtractorBranch:
+    Description: Text Extractor GitHub repo branch
+    Type: String
+    Default: master
+  ExtractorOAuthToken:
+    Description: Text Extractor GitHub Personal Access Token
+    Type: String
+    NoEcho: True
+  ExtractorOwner:
+    Description: Text Extractor GitHub user name
+    Type: String
+    Default: cmaxwellau
+  ExtractorRepo:
+    Description: Text Extractor GitHub repo name
+    Type: String
+    Default: tika-lambda
+  InfracodeBranch:
+    Description: Infracode GitHub repo branch
+    Type: String
+    Default: master
+  InfracodeOAuthToken:
+    Description: Infracode GitHub Personal Access Token
+    Type: String
+    NoEcho: True
+  InfracodeOwner:
+    Description: Infracode GitHub user name
+    Type: String
+    Default: cmaxwellau
+  InfracodeRepo:
+    Description: Infracode GitHub repo name
+    Type: String
+    Default: assignment-marker
+
+Outputs:
+  PipelineConsole:
+    Description: AWS Console URL for the Code Pipeline
+    Value: !Sub 'https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${PipelineName}'
+
+Resources:
+  ArtifactStoreBucket:
+    Type: AWS::S3::Bucket
+    # retain the non-empty bucket after stack is deleted.
+    DeletionPolicy: Retain
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+
+  ExtractorBuildJob:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: "extractor-build"
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts: 
+        Type: S3
+        Name: "extractor-bin"
+        Location: !Ref ArtifactStoreBucket
+        Packaging: "NONE"
+      TimeoutInMinutes: 15
+      Environment: 
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: "aws/codebuild/java:openjdk-8"
+        Type: LINUX_CONTAINER
+      Source: 
+        Type: GITHUB
+        Location: !Sub 'https://github.com/${ExtractorOwner}/${ExtractorRepo}.git'
+        #'
+        #Auth: !Ref ExtractorOAuthToken
+
+  CodePipelineSNSTopic:
+    Type: AWS::SNS::Topic
+
+  BuildPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      ArtifactStore:
+        Location: !Ref 'ArtifactStoreBucket'
+        Type: S3
+      Name: !Ref PipelineName
+      RoleArn: !GetAtt PipelineRole.Arn
+      Stages:
+        - 
+          Name: Source
+          Actions:
+            - ActionTypeId:
+                Version: 1
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+              Configuration:
+                Branch: !Ref ExtractorBranch
+                OAuthToken: !Ref ExtractorOAuthToken
+                Owner: !Ref ExtractorOwner
+                Repo: !Ref ExtractorRepo
+              InputArtifacts: []
+              Name: extractor-upstream
+              OutputArtifacts:
+              - Name: extractor-src
+              RunOrder: 1
+            - ActionTypeId:
+                Version: 1
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+              Configuration:
+                Branch: !Ref InfracodeBranch
+                OAuthToken: !Ref InfracodeOAuthToken
+                Owner: !Ref InfracodeOwner
+                Repo: !Ref InfracodeRepo
+              InputArtifacts: []
+              Name: infracode-upstream
+              OutputArtifacts:
+              - Name: infrastructure-code
+              RunOrder: 1
+        - 
+          Name: Build
+          Actions:
+            - ActionTypeId:
+                Version: 1
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: extractor-build
+              InputArtifacts:
+              - Name: extractor-src
+              Name: extractor-build
+              OutputArtifacts:
+              - Name: extractor-bin
+              RunOrder: 1
+        - 
+          Name: DeployBeta
+          Actions:
+            - ActionTypeId:
+                Version: 1
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+              Configuration:
+                ActionMode: CHANGE_SET_REPLACE
+                Capabilities: CAPABILITY_IAM
+                ChangeSetName: assignment-marker-changeset
+                ParameterOverrides: "{\n  \"DeployBucket\" : { \"Fn::GetArtifactAtt\" : [\"\
+                  extractor-bin\", \"BucketName\"]},\n  \"ExtractorJarKey\" : { \"Fn::GetArtifactAtt\"\
+                  \ : [\"extractor-bin\", \"ObjectKey\"]}\n}"
+                RoleArn: !GetAtt CloudFormationRole.Arn
+                StackName: assignment-marker
+                TemplatePath: infrastructure-code::extractor.yml
+              InputArtifacts:
+              - Name: extractor-bin
+              - Name: infrastructure-code
+              Name: stack-deploy
+              OutputArtifacts:
+              - Name: changeset-log
+              RunOrder: 1
+            - ActionTypeId:
+                Version: 1
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+              Configuration:
+                ActionMode: CHANGE_SET_EXECUTE
+                ChangeSetName: assignment-marker-changeset
+                OutputFileName: stack-creation-log
+                StackName: assignment-marker
+              InputArtifacts:
+              - Name: extractor-bin
+              - Name: infrastructure-code
+              Name: stack-create
+              OutputArtifacts:
+              - Name: stack-details
+              RunOrder: 2
+
+
+  CloudFormationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: 'sts:AssumeRole'
+          Effect: Allow
+          Principal:
+            Service: cloudformation.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+        - PolicyName: CloudFormationRole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - 'ec2:*'
+                  - 'iam:*'
+                  - 'lambda:*'
+                  - 's3:*'
+                  - 'cloudformation:*'
+                Effect: Allow
+                Resource: '*'
+              - Action:
+                  - 's3:PutBucketPolicy'
+                Effect: Allow
+                Resource: [ '*', '*/*' ]
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: 'sts:AssumeRole'
+          Effect: Allow
+          Principal:
+            Service: codepipeline.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+        - PolicyName: CodePipelineAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement: 
+              - Action: 
+                - "s3:GetObject"
+                - "s3:GetObjectVersion"
+                - "s3:GetBucketVersioning"
+                Resource: "*"
+                Effect: Allow
+              - Action: 
+                - "s3:PutObject"
+                Resource: 
+                  - "arn:aws:s3:::codepipeline*"
+                  - "arn:aws:s3:::elasticbeanstalk*"
+                Effect: Allow
+              - Action: 
+                - "codecommit:CancelUploadArchive"
+                - "codecommit:GetBranch"
+                - "codecommit:GetCommit"
+                - "codecommit:GetUploadArchiveStatus"
+                - "codecommit:UploadArchive"
+                Resource: "*"
+                Effect: Allow
+              - Action: 
+                - "codedeploy:CreateDeployment"
+                - "codedeploy:GetApplicationRevision"
+                - "codedeploy:GetDeployment"
+                - "codedeploy:GetDeploymentConfig"
+                - "codedeploy:RegisterApplicationRevision"
+                Resource: "*"
+                Effect: Allow
+              - Action: 
+                - "elasticbeanstalk:*"
+                - "ec2:*"
+                - "elasticloadbalancing:*"
+                - "autoscaling:*"
+                - "cloudwatch:*"
+                - "s3:*"
+                - "sns:*"
+                - "cloudformation:*"
+                - "rds:*"
+                - "sqs:*"
+                - "ecs:*"
+                - "iam:PassRole"
+                Resource: "*"
+                Effect: Allow
+              - Action: 
+                - "lambda:InvokeFunction"
+                - "lambda:ListFunctions"
+                Resource: "*"
+                Effect: Allow
+              - Action: 
+                - "opsworks:CreateDeployment"
+                - "opsworks:DescribeApps"
+                - "opsworks:DescribeCommands"
+                - "opsworks:DescribeDeployments"
+                - "opsworks:DescribeInstances"
+                - "opsworks:DescribeStacks"
+                - "opsworks:UpdateApp"
+                - "opsworks:UpdateStack"
+                Resource: "*"
+                Effect: Allow
+              - Action: 
+                - "cloudformation:CreateStack"
+                - "cloudformation:DeleteStack"
+                - "cloudformation:DescribeStacks"
+                - "cloudformation:UpdateStack"
+                - "cloudformation:CreateChangeSet"
+                - "cloudformation:DeleteChangeSet"
+                - "cloudformation:DescribeChangeSet"
+                - "cloudformation:ExecuteChangeSet"
+                - "cloudformation:SetStackPolicy"
+                - "cloudformation:ValidateTemplate"
+                - "iam:PassRole"
+                Resource: "*"
+                Effect: Allow
+              - Action: 
+                - "codebuild:BatchGetBuilds"
+                - "codebuild:StartBuild"
+                Resource: "*"
+                Effect: Allow
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: 'sts:AssumeRole'
+          Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+        - PolicyName: CodePipelineAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                - s3:GetObject
+                - s3:GetObjectVersion
+                - s3:GetBucketVersioning
+                Resource: "*"
+                Effect: Allow
+              - Action:
+                - s3:PutObject
+                Resource: "*"
+                Effect: Allow
+              - Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                Resource: 
+                - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*'
+                - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*:*'
+                Effect: Allow
+
+
