@@ -1,0 +1,58 @@
+plugins {
+  id "com.github.johnrengelman.shadow" version "4.0.3"
+}
+
+apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+archivesBaseName = 'tika-lambda'
+
+dependencies {
+  compile fileTree(dir: 'jars', include: '*.jar')
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  def withoutX = { 
+    exclude group:"com.amazonaws", module: "aws-java-sdk-cognitoidentity"
+      exclude group:"com.amazonaws", module: "aws-java-sdk-kinesis"
+      exclude group:"com.amazonaws", module: "aws-java-sdk-sqs"
+      exclude group:"com.amazonaws", module: "aws-java-sdk-sns"
+      exclude group:"com.amazonaws", module: "aws-java-sdk-sns"
+      exclude group:"com.amazonaws", module: "aws-java-sdk-dynamodb"
+      exclude group:"org.opengis", module: "geoapi"
+      exclude group:"org.aspectj", module: "aspectj"
+      exclude group:"org.apache.opennlp", module: "opennlp-tools"
+      exclude group:"com.google.guava"
+      exclude group:"org.apache.commons", module: "commons-vfs2"
+      exclude group:"org.apache.maven.scm"
+      exclude group:"org.apache.sis.core"
+      exclude group:"edu.ucar", module: "grib"
+      exclude group:"edu.ucar", module: "cdm"
+      exclude group:"org.bouncycastle", module: "bcprov-jdk15on"
+      exclude group:"org.bouncycastle", module: "cpkix-jdk15on"
+
+      exclude group:"com.healthmarketscience.jackcess"
+      exclude group:"net.sf.ehcache", module: "ehcache-core"
+
+  }
+  compile "com.googlecode.json-simple:json-simple:1.1.1", withoutX
+    compile "org.apache.tika:tika-parsers:+", withoutX
+    compile "com.amazonaws:aws-lambda-java-core:+", withoutX
+    compile "com.amazonaws:aws-lambda-java-events:+", withoutX
+    compile "com.amazonaws:aws-java-sdk-core:+", withoutX
+    compile "com.amazonaws:aws-java-sdk-s3:+", withoutX
+}
+
+task buildZip(type: Zip) {
+  from compileJava
+    from processResources
+    into('lib') {
+      from configurations.runtime
+    }
+}
+
+build.dependsOn buildZip
