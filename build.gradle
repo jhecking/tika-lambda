@@ -6,6 +6,7 @@ apply plugin: 'java'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 archivesBaseName = 'tika-lambda'
+sourceCompatibility = '1.8'
 
 dependencies {
   compile fileTree(dir: 'jars', include: '*.jar')
@@ -56,3 +57,11 @@ task buildZip(type: Zip) {
 }
 
 build.dependsOn buildZip
+
+task 'package'(type: Exec) {
+    commandLine 'sam', 'package', '--s3-bucket', packageBucket, '--template-file', 'template.yaml', '--output-template-file', 'packaged.yaml'
+}
+
+task deploy(type: Exec) {
+    commandLine 'sam', 'deploy', '--template-file', 'packaged.yaml', '--stack-name', 'tika-lambda', '--capabilities', 'CAPABILITY_IAM'
+}
