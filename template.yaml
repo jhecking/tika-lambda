@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: Apache Tika Serverless Text Extracter
+
+Parameters:
+    SourceBucketName:
+        Type: String
+        Description: S3 bucket into which new documents are uploaded
+
+Globals:
+    Function:
+        Tracing: Active
+
+Resources:
+
+    SourceBucket:
+        Type: AWS::S3::Bucket
+        Properties:
+            BucketName: !Ref SourceBucketName
+
+    TikaFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: build/distributions/tika-lambda.zip
+            Handler: extractor.TikaLambdaHandler::handleRequest
+            Runtime: java8
+            Timeout: 60
+            MemorySize: 256
+            Events:
+                FileUploaded:
+                    Type: S3
+                    Properties:
+                        Bucket: !Ref SourceBucket
+                        Events: s3:ObjectCreated:*
+            Policies:
+                - S3CrudPolicy:
+                    BucketName: !Ref SourceBucketName
