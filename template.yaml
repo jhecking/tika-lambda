@@ -4,9 +4,21 @@ Transform: AWS::Serverless-2016-10-31
 Description: Apache Tika Serverless Text Extracter
 
 Parameters:
-    SourceBucketName:
+    DocumentBucketName:
         Type: String
         Description: S3 bucket into which new documents are uploaded
+    SourcePrefix:
+        Type: String
+        Description: Prefix for document upload
+        Default: "upload/"
+    TargetPrefix:
+        Type: String
+        Description: Prefix for extracted data
+        Default: "extracted/"
+    TargetExtension:
+        Type: String
+        Description: File extension for extracted data
+        Default: ".extracted.json"
 
 Globals:
     Function:
@@ -14,10 +26,10 @@ Globals:
 
 Resources:
 
-    SourceBucket:
+    DocumentBucket:
         Type: AWS::S3::Bucket
         Properties:
-            BucketName: !Ref SourceBucketName
+            BucketName: !Ref DocumentBucketName
 
     TikaFunction:
         Type: AWS::Serverless::Function
@@ -26,13 +38,33 @@ Resources:
             Handler: extractor.TikaLambdaHandler::handleRequest
             Runtime: java8
             Timeout: 60
-            MemorySize: 256
+            MemorySize: 512
             Events:
                 FileUploaded:
                     Type: S3
                     Properties:
-                        Bucket: !Ref SourceBucket
+                        Bucket: !Ref DocumentBucket
                         Events: s3:ObjectCreated:*
+                        Filter:
+                            S3Key:
+                                Rules:
+                                    - Name: prefix
+                                      Value: !Ref SourcePrefix
             Policies:
-                - S3CrudPolicy:
-                    BucketName: !Ref SourceBucketName
+                - AWSLambdaExecute
+                - Version: '2012-10-17'
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - s3:GetObject
+                        - s3:GetObjectACL
+                      Resource: !Sub arn:aws:s3:::${DocumentBucketName}/${SourcePrefix}*
+                    - Effect: Allow
+                      Action:
+                        - s3:PutObject
+                      Resource: !Sub arn:aws:s3:::${DocumentBucketName}/${TargetPrefix}*
+            Environment:
+                Variables:
+                    S3_SOURCE_PREFIX: !Ref SourcePrefix
+                    S3_TARGET_PREFIX: !Ref TargetPrefix
+                    S3_TARGET_EXT: !Ref TargetExtension
