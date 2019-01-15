@@ -9,3 +9,5 @@ as well as [cmaxwellau/tika-lambda](https://github.com/cmaxwellau/tika-lambda).
 
 This version of the Tika Lambda function adds:
 * An AWS Serverless Application Model template to easily package & deploy the function.
+* A Gradle build file to build, package & deploy the application.
+* Configurable S3 bucket prefix & extension for extracted data.
