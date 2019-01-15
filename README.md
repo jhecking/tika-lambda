@@ -11,3 +11,14 @@ This version of the Tika Lambda function adds:
 * An AWS Serverless Application Model template to easily package & deploy the function.
 * A Gradle build file to build, package & deploy the application.
 * Configurable S3 bucket prefix & extension for extracted data.
+
+## AWS CloudFormation Template
+
+### Parameters
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| DocumentBucket | - | S3 Bucket Name |
+| SourcePrefix | upload/ | Folder prefix which the Lambda will watch for new uploads |
+| TargetPrefix | extracted/ | Folder prefix under which the extracted data will be stored |
+| TargetExtension | .extracted.json | Filename extension for the extracted data files (JSON) |
