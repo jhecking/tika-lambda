@@ -65,3 +65,7 @@ task 'package'(type: Exec) {
 task deploy(type: Exec) {
     commandLine 'sam', 'deploy', '--template-file', 'packaged.yaml', '--stack-name', 'tika-lambda', '--capabilities', 'CAPABILITY_IAM'
 }
+
+task publish(type: Exec) {
+    commandLine 'sam', 'publish', '--template', 'packaged.yaml', '--region', awsRegion
+}
