@@ -12,7 +12,7 @@ Metadata:
         LicenseUrl: s3://sam-builds/apache-tika-text-extractor/LICENSE
         ReadmeUrl: s3://sam-builds/apache-tika-text-extractor/README.md
         HomePageUrl: https://github.com/jhecking/tika-lambda
-        SemanticVersion: '0.2.0'
+        SemanticVersion: '0.3.0'
         SourceCodeUrl: https://github.com/jhecking/tika-lambda
 
 Parameters:

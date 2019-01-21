@@ -73,6 +73,7 @@ public class TextExtractor {
         String contentLength = tikaMetadata.get("Content-Length");
         contentLength = contentLength != null ? contentLength : "0";
 
+        extractJson.put("ExtractorVersion", "0.3.0");
         extractJson.put("Exception", null);
         extractJson.put("FilePath", "s3://" + bucket + "/" + key);
         extractJson.put("Text", extractedText);
@@ -95,6 +96,7 @@ public class TextExtractor {
     private String assembleExceptionResult(String bucket, String key, Exception e) {
         JSONObject exceptionJson = new JSONObject();
 
+        exceptionJson.put("ExtractorVersion", "0.3.0");
         exceptionJson.put("Exception", e.getLocalizedMessage());
         exceptionJson.put("FilePath", "s3://" + bucket + "/" + key);
         exceptionJson.put("ContentType", "unknown");
